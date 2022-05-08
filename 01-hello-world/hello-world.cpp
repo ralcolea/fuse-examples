@@ -48,8 +48,8 @@ static int read_callback(const char *path, char *buf, size_t size, off_t offset,
                          struct fuse_file_info *fi) {
 
     if (strcmp(path, filepath) == 0) {
-        size_t len = strlen(content);
-        if (offset >= len) {
+        long unsigned int len = strlen(content);
+        if (offset >= (off_t) len) {
             return 0;
         }
 
@@ -76,4 +76,3 @@ int main(int argc, char *argv[])
 {
     return fuse_main(argc, argv, &fuse_operations, NULL);
 }
-
