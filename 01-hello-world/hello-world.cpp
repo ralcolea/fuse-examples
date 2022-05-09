@@ -6,7 +6,7 @@
 
 static const char *filepath = "/.crash";
 static const char *filename = ".crash";
-static const char *content = "Hello World crash!\n";
+static const char *content = "Hello World crash!";
 
 static int getattr_callback(const char *path, struct stat *stbuf) {
     memset(stbuf, 0, sizeof(struct stat));
