@@ -16,9 +16,11 @@ _deps
 *.lo
 *.o
 *.obj
+*.dll
 
 # Executables
 bin/
 *.exe
 *.out
 *.app
+.vscode/
