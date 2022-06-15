@@ -17,10 +17,16 @@
  * 
  * Compile this demo using Cygwin:
  * g++ dokanyfuse.cpp -I../include -D_FILE_OFFSET_BITS=64 -L. -lcygdokanfuse2 -o dokanyfuse.exe
- *
- * Run this demo:
- * ./dokanyfuse.exe h       # Mount a crash filesystem / as drive H:\
  * 
+ * Compile this demo using MinGW:
+ * g++ dokanyfuse.cpp -I../include -D_FILE_OFFSET_BITS=64 -L. -llibdokanfuse2 -o dokanyfuse.exe
+ *
+ * Run this demo using Cygwin:
+ * ./dokanyfuse.exe h       # Mount a crash filesystem as drive H:\
+ * 
+ * Run this demo using MinGW:
+ * dokanyfuse.exe h         # Mount a crash filesystem as drive H:\
+
  * \section section_source the complete source
  * \include dokanyfuse.cpp
  */
@@ -50,12 +56,17 @@
 #include <sys/xattr.h>
 #endif
 
+#ifndef FUSE_STAT
+#define FUSE_STAT stat
+#endif
+
 static const char *filepath = "/.crash";
 static const char *filename = ".crash";
 static const char *content = "Hello World crash!";
 
-static int getattr_callback(const char *path, struct stat *stbuf) {
-    memset(stbuf, 0, sizeof(struct stat));
+// Important change when compiling with MinGW: Use struct FUSE_STAT instead of struct stat
+static int getattr_callback(const char *path, struct FUSE_STAT *stbuf) {
+    memset(stbuf, 0, sizeof(struct FUSE_STAT));
 
     if (strcmp(path, "/") == 0) {
         stbuf->st_mode = S_IFDIR | 0755;
@@ -111,12 +122,15 @@ static int read_callback(const char *path, char *buf, size_t size, off_t offset,
     return -ENOENT;
 }
 
-static struct fuse_operations xmp_oper = {
-    .getattr = getattr_callback,
-    .open = open_callback,
-    .read = read_callback,
-    .readdir = readdir_callback,
-};
+// Using lambda expression to avoid 'non-trivial designated initializers not supported' error
+static struct fuse_operations xmp_oper = []{
+    fuse_operations ops{};
+    ops.getattr = getattr_callback;
+    ops.open = open_callback;
+    ops.read = read_callback;
+    ops.readdir = readdir_callback;
+    return ops;
+}();
 
 int main(int argc, char *argv[])
 {
